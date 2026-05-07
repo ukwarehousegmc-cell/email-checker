@@ -31,7 +31,7 @@ def run_check():
 
 
 # 3:00 PM UK time = 14:00 UTC (adjust for BST if needed)
-schedule.every().day.at("14:00").do(run_check)
+schedule.every().day.at("14:40").do(run_check)
 
 log.info("Scheduler started. Will run daily at 14:00 UTC (3:00 PM UK time).")
 
