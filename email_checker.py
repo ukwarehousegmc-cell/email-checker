@@ -183,9 +183,20 @@ def check_unreplied(service, my_email):
         from_addr = headers.get("From", "").lower()
         subject   = headers.get("Subject", "(no subject)")
 
-        if my_email in from_addr:
-            continue
+        # Skip automated senders
         if any(skip in from_addr for skip in SKIP_SENDERS):
+            continue
+
+        # Check if I already replied anywhere in the thread
+        i_already_replied = any(
+            my_email in h.get("value", "").lower()
+            for msg in messages
+            for h in msg.get("payload", {}).get("headers", [])
+            if h.get("name") == "From"
+        )
+
+        # Skip if I already replied — dont show in digest at all
+        if i_already_replied:
             continue
 
         try:
@@ -217,15 +228,7 @@ def check_unreplied(service, my_email):
         draft_id   = None
         draft_link = None
 
-        # Check if I already replied anywhere in the thread
-        i_already_replied = any(
-            my_email in h.get("value", "").lower()
-            for msg in messages
-            for h in msg.get("payload", {}).get("headers", [])
-            if h.get("name") == "From"
-        )
-
-        if is_quote and not i_already_replied:
+        if is_quote:
             log.info(f"Quote email (unreplied): {subject} from {from_email}")
             ai_reply = generate_ai_draft(from_name, from_email, subject, email_body)
             if ai_reply:
