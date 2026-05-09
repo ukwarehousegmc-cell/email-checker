@@ -217,8 +217,16 @@ def check_unreplied(service, my_email):
         draft_id   = None
         draft_link = None
 
-        if is_quote:
-            log.info(f"Quote email: {subject} from {from_email}")
+        # Check if I already replied anywhere in the thread
+        i_already_replied = any(
+            my_email in h.get("value", "").lower()
+            for msg in messages
+            for h in msg.get("payload", {}).get("headers", [])
+            if h.get("name") == "From"
+        )
+
+        if is_quote and not i_already_replied:
+            log.info(f"Quote email (unreplied): {subject} from {from_email}")
             ai_reply = generate_ai_draft(from_name, from_email, subject, email_body)
             if ai_reply:
                 draft_id = create_gmail_draft(service, from_email, from_name, subject, ai_reply, thread_id)
